@@ -1,42 +1,48 @@
 import altair as alt
+# app.py
+
 import streamlit as st
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-"""
-# Welcome to Streamlit!
+# Felhasználói bemeneti mezők
+claw_length = st.number_input('Claw Length (cm):', min_value=0.0, max_value=100.0, value=50.0)
+endangered = st.selectbox('Endangered:', [0, 1], index=0)
+size_cm = st.number_input('Size (cm):', min_value=0.0, max_value=100.0, value=50.0)
+specie = st.selectbox('Specie:', [0, 1], index=0)
+sub_specie = st.selectbox('Sub-specie:', [0, 1], index=0)
+tail_length = st.number_input('Tail Length (cm):', min_value=0.0, max_value=100.0, value=50.0)
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:.
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
+# Prediktív modell
+def predict(claw_length, endangered, size_cm, specie, sub_specie, tail_length):
+    # Dummy adatok generálása
+    data = {
+        'claw_length_cm': [1, 2, 3, 4, 5],
+        'endangered': [0, 1, 0, 1, 0],
+        'size_cm': [10, 15, 20, 25, 30],
+        'specie': [0, 1, 0, 1, 0],
+        'sub_specie': [0, 1, 0, 1, 0],
+        'tail_length_cm': [5, 10, 15, 20, 25],
+        'weight_kg': [2, 4, 6, 8, 10]
+    }
+    df = pd.DataFrame(data)
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+    # Bemeneti változók
+    X = df[['claw_length_cm', 'endangered', 'size_cm', 'specie', 'sub_specie', 'tail_length_cm']]
+    y = df['weight_kg']
 
-num_points = st.slider("Number of points in spiral", 1, 10000, 1100)
-num_turns = st.slider("Number of turns in spiral", 1, 300, 31)
+    # Modell tanítása
+    model = RandomForestRegressor(random_state=1)
+    model.fit(X, y)
 
-indices = np.linspace(0, 1, num_points)
-theta = 2 * np.pi * num_turns * indices
-radius = indices
+    # Predikció
+    prediction = model.predict([[claw_length, endangered, size_cm, specie, sub_specie, tail_length]])[0]
+    return prediction
 
-x = radius * np.cos(theta)
-y = radius * np.sin(theta)
+# Predikció és eredmény kiírása
+if st.button('Prediktálás'):
+    result = predict(claw_length, endangered, size_cm, specie, sub_specie, tail_length)
+    st.write('Prediktált weight érték:', result)
 
-df = pd.DataFrame({
-    "x": x,
-    "y": y,
-    "idx": indices,
-    "rand": np.random.randn(num_points),
-})
-
-st.altair_chart(alt.Chart(df, height=700, width=700)
-    .mark_point(filled=True)
-    .encode(
-        x=alt.X("x", axis=None),
-        y=alt.Y("y", axis=None),
-        color=alt.Color("idx", legend=None, scale=alt.Scale()),
-        size=alt.Size("rand", legend=None, scale=alt.Scale(range=[1, 150])),
-    ))
